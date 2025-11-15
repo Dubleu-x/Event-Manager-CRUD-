@@ -23,6 +23,12 @@ public class EventController {
         return ResponseEntity.ok(eventService.createEvent(request));
     }
     
+    // Add this method to your existing EventController
+@GetMapping("/available")
+public ResponseEntity<List<EventDTO.Response>> getAvailableEvents() {
+    return ResponseEntity.ok(eventService.getActiveEvents());
+}
+
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<EventDTO.Response>> getAllEvents() {
