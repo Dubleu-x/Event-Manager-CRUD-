@@ -1,164 +1,221 @@
 # Event Manager Backend System
 
-A comprehensive Spring Boot backend application for managing events, users, and event applications with role-based access control.
+A comprehensive Spring Boot backend application for managing events, users, and event applications with JWT authentication and role-based access control.
 
 ## 🚀 Features
 
 ### User Management
-- **Admin Role**: Create, view, update, and delete users
-- **User Role**: View active events and apply for events
-- **Authentication**: Spring Security with Basic Auth
-- **Role-based Access Control**: ADMIN and USER roles
+- **User Registration & Login** with JWT authentication
+- **Role-based Access Control** (ADMIN and USER roles)
+- **Admin User Management** - Create, view, update, and delete users
 
 ### Event Management
-- **Admin Role**: Create, view, update, and delete events
-- **Automatic Organizer Assignment**: Events are linked to the admin who created them
-- **Active Events Filter**: Users can view only active events (not expired)
+- **Event CRUD Operations** - Admin can create, read, update, and delete events
+- **Available Events** - Public endpoint to view active events
+- **Automatic Organizer Assignment** - Events are linked to the admin who created them
+
+### Application Management
+- **Event Applications** - Users can apply for events
+- **Application Review** - Admin can approve or reject applications
+- **Status Tracking** - PENDING, APPROVED, REJECTED statuses
+- **Duplicate Prevention** - Users can apply only once per event
 
 ### Security
-- Spring Security with BCrypt password encoding
-- Role-based endpoint protection
-- Pre-configured admin user on startup
+- **JWT Authentication** with Bearer tokens
+- **Password Encryption** using BCrypt
+- **Role-based Endpoint Protection**
+- **CORS Configuration**
 
 ## 🛠️ Technology Stack
 
 - **Java 17**
 - **Spring Boot 3.2.0**
-- **Spring Data JPA**
-- **Spring Security**
+- **Spring Data JPA** (Hibernate)
+- **Spring Security** with JWT
 - **MySQL Database**
-- **Lombok**
-- **Maven**
+- **Lombok** for boilerplate reduction
+- **Maven** for dependency management
+- **JJWT** for JWT token handling
 
 ## 📋 Prerequisites
 
 Before running this application, ensure you have:
 
-- Java 17 or higher
-- MySQL Server 8.0 or higher
-- Maven 3.6 or higher
+- **Java 17** or higher
+- **MySQL Server 8.0** or higher
+- **Maven 3.6** or higher
+- **Git** (optional)
 
 ## 🗄️ Database Setup
 
-1. Create a MySQL database:
+1. **Create MySQL Database**:
 ```sql
 CREATE DATABASE event_manager;
 ```
 
-2. Update the database configuration in `src/main/resources/application.properties`:
+2. **Update database configuration** in `src/main/resources/application.properties`:
 ```properties
 spring.datasource.url=jdbc:mysql://localhost:3306/event_manager
-spring.datasource.username=your_username
-spring.datasource.password=your_password
+spring.datasource.username=your_mysql_username
+spring.datasource.password=your_mysql_password
 ```
 
 ## 🚀 Installation & Running
 
-1. **Clone the repository** (if applicable) or navigate to the project directory
+### Step 1: Clone and Setup
+```bash
+# Clone the repository (if using Git)
+git clone <repository-url>
+cd eventmanager
 
-2. **Compile the project**:
+# Or extract the project files to eventmanager directory
+```
+
+### Step 2: Configure Database
+Update the database credentials in `src/main/resources/application.properties`
+
+### Step 3: Build the Application
 ```bash
 mvn clean compile
 ```
 
-3. **Run the application**:
+### Step 4: Run the Application
 ```bash
 mvn spring-boot:run
 ```
 
 The application will start on `http://localhost:8080`
 
-## 🔐 Default Admin User
+## 🔐 Default Users
 
-On first startup, the system automatically creates an admin user:
+On first startup, the system automatically creates:
+
+### Admin User
 - **Username**: `admin`
 - **Password**: `admin123`
 - **Role**: `ADMIN`
+- **Email**: `admin@eventmanager.com`
+
+### Test User (Optional)
+You can register additional users through the API.
 
 ## 📚 API Documentation
 
-### Authentication
-All endpoints use **HTTP Basic Authentication**. Include credentials in the request header.
+### Authentication Endpoints
+
+| Method | Endpoint | Role | Description |
+|--------|----------|------|-------------|
+| POST | `/api/auth/register` | Public | Register a new user |
+| POST | `/api/auth/login` | Public | Login and receive JWT token |
 
 ### User Management Endpoints (Admin Only)
 
-| Method | Endpoint | Description | Required Role |
-|--------|----------|-------------|---------------|
-| POST | `/api/users` | Create a new user | ADMIN |
-| GET | `/api/users` | Get all users | ADMIN |
-| GET | `/api/users/{id}` | Get user by ID | ADMIN |
-| PUT | `/api/users/{id}` | Update user details | ADMIN |
-| DELETE | `/api/users/{id}` | Delete a user | ADMIN |
-
-#### User Request Examples:
-
-**Create User:**
-```bash
-curl -u admin:admin123 -X POST -H "Content-Type: application/json" \
-  -d '{
-    "username": "john_doe",
-    "email": "john@example.com",
-    "password": "password123",
-    "role": "USER"
-  }' \
-  http://localhost:8080/api/users
-```
-
-**Get All Users:**
-```bash
-curl -u admin:admin123 http://localhost:8080/api/users
-```
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/users` | Get all users |
+| POST | `/api/users` | Create a new user |
+| GET | `/api/users/{id}` | Get user by ID |
+| PUT | `/api/users/{id}` | Update user details |
+| DELETE | `/api/users/{id}` | Delete a user |
 
 ### Event Management Endpoints
 
-| Method | Endpoint | Description | Required Role |
-|--------|----------|-------------|---------------|
-| POST | `/api/events` | Create a new event | ADMIN |
-| GET | `/api/events` | Get all events | ADMIN |
-| GET | `/api/events/active` | Get active events | ADMIN, USER |
-| GET | `/api/events/{id}` | Get event by ID | ADMIN, USER |
-| PUT | `/api/events/{id}` | Update event details | ADMIN |
-| DELETE | `/api/events/{id}` | Delete an event | ADMIN |
+| Method | Endpoint | Role | Description |
+|--------|----------|------|-------------|
+| GET | `/api/events/available` | Public | Get active events |
+| GET | `/api/events` | ADMIN | Get all events |
+| POST | `/api/events` | ADMIN | Create a new event |
+| GET | `/api/events/{id}` | ADMIN, USER | Get event by ID |
+| PUT | `/api/events/{id}` | ADMIN | Update event |
+| DELETE | `/api/events/{id}` | ADMIN | Delete event |
 
-#### Event Request Examples:
+### Application Endpoints
 
-**Create Event:**
+| Method | Endpoint | Role | Description |
+|--------|----------|------|-------------|
+| POST | `/api/applications/apply/{eventId}` | USER | Apply for event |
+| GET | `/api/applications/my-applications` | USER | Get user's applications |
+| GET | `/api/applications` | ADMIN | Get all applications |
+| PUT | `/api/applications/{id}/approve` | ADMIN | Approve application |
+| PUT | `/api/applications/{id}/reject` | ADMIN | Reject application |
+
+## 🧪 Testing with Postman
+
+### 1. Import Postman Collection
+1. Open Postman
+2. Import the provided Postman collection JSON file
+3. Set up environment variables:
+   - `baseUrl`: `http://localhost:8080`
+
+### 2. Test Sequence
+
+#### Step 1: Authentication
 ```bash
-curl -u admin:admin123 -X POST -H "Content-Type: application/json" \
-  -d '{
-    "title": "Spring Conference 2024",
-    "description": "Annual Spring Developer Conference",
-    "expiryDate": "2024-12-31"
-  }' \
-  http://localhost:8080/api/events
+# Register a new user
+POST /api/auth/register
+Body: {
+  "username": "testuser",
+  "email": "test@example.com",
+  "password": "password123"
+}
+
+# Login as user
+POST /api/auth/login
+Body: {
+  "username": "testuser",
+  "password": "password123"
+}
+Save the JWT token for future requests
 ```
 
-**Get Active Events:**
+#### Step 2: Admin Operations
 ```bash
-curl -u admin:admin123 http://localhost:8080/api/events/active
+# Login as admin
+POST /api/auth/login
+Body: {
+  "username": "admin",
+  "password": "admin123"
+}
+Save the admin JWT token
+
+# Create events
+POST /api/events
+Headers: Authorization: Bearer {admin-token}
+Body: {
+  "title": "Spring Boot Workshop",
+  "description": "Learn Spring Boot",
+  "expiryDate": "2024-12-31"
+}
 ```
 
-## 🗃️ Database Schema
+#### Step 3: User Operations
+```bash
+# View available events
+GET /api/events/available
 
-### Users Table
-| Field | Type | Description |
-|-------|------|-------------|
-| id | Long | Primary Key |
-| username | String | Unique username |
-| email | String | Unique email address |
-| password | String | Encrypted password |
-| role | Enum | ADMIN or USER |
-| createdDate | LocalDateTime | Account creation timestamp |
+# Apply for event
+POST /api/applications/apply/1
+Headers: Authorization: Bearer {user-token}
 
-### Events Table
-| Field | Type | Description |
-|-------|------|-------------|
-| id | Long | Primary Key |
-| title | String | Event title |
-| description | Text | Event details |
-| uploadDate | LocalDate | Event creation date |
-| expiryDate | LocalDate | Event expiry date |
-| organizer_id | Long | Foreign Key to Users (Admin) |
+# View user applications
+GET /api/applications/my-applications
+Headers: Authorization: Bearer {user-token}
+```
+
+#### Step 4: Admin Management
+```bash
+# View all applications
+GET /api/applications
+Headers: Authorization: Bearer {admin-token}
+
+# Approve application
+PUT /api/applications/1/approve
+Headers: Authorization: Bearer {admin-token}
+
+# View all users
+GET /api/users
+Headers: Authorization: Bearer {admin-token}
+```
 
 ## 🔧 Configuration
 
@@ -166,113 +223,192 @@ curl -u admin:admin123 http://localhost:8080/api/events/active
 Key configuration in `src/main/resources/application.properties`:
 
 ```properties
-# Database
+# Database Configuration
 spring.datasource.url=jdbc:mysql://localhost:3306/event_manager
-spring.datasource.username=your_username
+spring.datasource.username=root
 spring.datasource.password=your_password
 
-# JPA
+# JPA Configuration
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
+spring.jpa.properties.hibernate.format_sql=true
 
-# Server
+# JWT Configuration
+jwt.secret=eventManagerSecretKey2024ForJWTTokenGeneration
+jwt.expiration=86400000
+
+# Server Configuration
 server.port=8080
 
-# Security (temporary - for testing)
-spring.security.user.name=admin
-spring.security.user.password=admin123
+# Logging
+logging.level.com.eventmanager=DEBUG
 ```
 
-## 🧪 Testing the API
+### JWT Configuration
+- **Secret Key**: Configured in application.properties
+- **Expiration**: 24 hours (86400000 milliseconds)
+- **Algorithm**: HS256
 
-### Using curl:
+## 🗃️ Database Schema
 
-1. **Test authentication**:
-```bash
-curl -u admin:admin123 http://localhost:8080/api/users
-```
+### Users Table
+| Field | Type | Description |
+|-------|------|-------------|
+| id | BIGINT | Primary Key, Auto Increment |
+| username | VARCHAR(255) | Unique username |
+| email | VARCHAR(255) | Unique email address |
+| password | VARCHAR(255) | Encrypted password |
+| role | ENUM | ADMIN or USER |
+| created_date | TIMESTAMP | Account creation timestamp |
 
-2. **Create a test user**:
-```bash
-curl -u admin:admin123 -X POST -H "Content-Type: application/json" \
-  -d '{"username":"testuser","email":"test@example.com","password":"testpass","role":"USER"}' \
-  http://localhost:8080/api/users
-```
+### Events Table
+| Field | Type | Description |
+|-------|------|-------------|
+| id | BIGINT | Primary Key, Auto Increment |
+| title | VARCHAR(255) | Event title |
+| description | TEXT | Event details |
+| upload_date | DATE | Event creation date |
+| expiry_date | DATE | Event expiry date |
+| organizer_id | BIGINT | Foreign Key to Users (Admin) |
 
-3. **Create a test event**:
-```bash
-curl -u admin:admin123 -X POST -H "Content-Type: application/json" \
-  -d '{"title":"Test Event","description":"This is a test event","expiryDate":"2024-12-31"}' \
-  http://localhost:8080/api/events
-```
+### Event_Applications Table
+| Field | Type | Description |
+|-------|------|-------------|
+| id | BIGINT | Primary Key, Auto Increment |
+| event_id | BIGINT | Foreign Key to Events |
+| user_id | BIGINT | Foreign Key to Users |
+| application_date | TIMESTAMP | Application submission time |
+| status | ENUM | PENDING, APPROVED, or REJECTED |
 
-### Using Postman:
+## 🐛 Troubleshooting
 
-1. Set authentication to **Basic Auth** with username `admin` and password `admin123`
-2. Use the endpoints listed above with appropriate HTTP methods and JSON bodies
+### Common Issues
+
+1. **Database Connection Error**
+   - Verify MySQL is running
+   - Check database credentials in application.properties
+   - Ensure database `event_manager` exists
+
+2. **Compilation Errors**
+   - Ensure Java 17 is installed: `java -version`
+   - Clean and rebuild: `mvn clean compile`
+
+3. **JWT Authentication Issues**
+   - Verify token is included in Authorization header
+   - Check token expiration
+   - Ensure secret key is configured
+
+4. **Role-based Access Denied**
+   - Verify user has correct role for the endpoint
+   - ADMIN role required for user management endpoints
+
+5. **Duplicate Application Error**
+   - Users can apply only once per event
+   - Check if user has already applied
+
+### Logs and Debugging
+- Check application logs for detailed error messages
+- Enable debug logging in application.properties
+- Verify JWT token generation and validation
 
 ## 📁 Project Structure
 
 ```
 src/main/java/com/eventmanager/
-├── config/           # Security configuration
-├── controller/       # REST controllers
-├── dto/             # Data Transfer Objects
-├── entity/          # JPA entities
-├── repository/      # Data access layer
-├── service/         # Business logic
-└── EventManagerApplication.java
+├── config/                 # Configuration classes
+│   ├── SecurityConfig.java # Security configuration
+│   └── JwtAuthenticationFilter.java # JWT filter
+├── controller/            # REST controllers
+│   ├── AuthController.java
+│   ├── UserController.java
+│   ├── EventController.java
+│   └── ApplicationController.java
+├── dto/                  # Data Transfer Objects
+│   ├── AuthDTO.java
+│   ├── UserDTO.java
+│   ├── EventDTO.java
+│   └── ApplicationDTO.java
+├── entity/               # JPA entities
+│   ├── User.java
+│   ├── Event.java
+│   └── Application.java
+├── repository/           # Data access layer
+│   ├── UserRepository.java
+│   ├── EventRepository.java
+│   └── ApplicationRepository.java
+├── service/              # Business logic
+│   ├── AuthService.java
+│   ├── UserService.java
+│   ├── EventService.java
+│   └── ApplicationService.java
+├── util/                 # Utility classes
+│   └── JwtUtil.java      # JWT utility
+└── EventManagerApplication.java # Main application class
 ```
-
-## 🐛 Troubleshooting
-
-### Common Issues:
-
-1. **Database Connection Error**:
-   - Verify MySQL is running
-   - Check database credentials in `application.properties`
-
-2. **Compilation Errors**:
-   - Ensure Java 17 is installed
-   - Run `mvn clean compile`
-
-3. **Authentication Failures**:
-   - Verify credentials are correct
-   - Check that admin user was created on startup
-
-4. **Role-based Access Denied**:
-   - Ensure user has correct role for the endpoint
-   - ADMIN role required for user management endpoints
-
-## 📝 Development Notes
-
-- The system uses Hibernate's `ddl-auto=update` for automatic schema generation
-- Passwords are encrypted using BCrypt
-- All timestamps are in server's local timezone
-- Events are automatically assigned to the currently authenticated admin
 
 ## 🔮 Future Enhancements
 
-- Event applications management (Part 2)
-- Email notifications
+- Email notifications for application status updates
 - File upload for event images
 - Advanced search and filtering
 - Pagination for large datasets
 - Swagger/OpenAPI documentation
+- Docker containerization
+- Unit and integration tests
+- Frontend React application
 
-## 👥 Contributing
+## 👥 API Response Examples
 
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+### Successful Login Response
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9...",
+  "type": "Bearer",
+  "id": 2,
+  "username": "testuser",
+  "email": "test@example.com",
+  "role": "USER",
+  "message": "Login successful"
+}
+```
+
+### Event Response
+```json
+{
+  "id": 1,
+  "title": "Spring Boot Workshop",
+  "description": "Learn Spring Boot fundamentals",
+  "uploadDate": "2024-11-16",
+  "expiryDate": "2024-12-31",
+  "organizerId": 1,
+  "organizerName": "admin"
+}
+```
+
+### Application Response
+```json
+{
+  "id": 1,
+  "eventId": 1,
+  "eventTitle": "Spring Boot Workshop",
+  "userId": 2,
+  "userName": "testuser",
+  "userEmail": "test@example.com",
+  "applicationDate": "2024-11-16T10:30:00.12345",
+  "status": "APPROVED"
+}
+```
+
+## 📞 Support
+
+For issues and questions:
+1. Check the troubleshooting section
+2. Review application logs
+3. Verify database connectivity
+4. Ensure all dependencies are correctly configured
 
 ## 📄 License
 
 This project is licensed under the MIT License.
 
----
-
-**Note**: This is Part 1 of the Event Manager system, focusing on User and Event management. Part 2 will include Event Applications functionality.
